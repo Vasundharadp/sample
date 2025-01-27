@@ -1,0 +1,60 @@
+var.tf
+---------------
+variable "region"{
+ type = string
+ default = "ap-south-1"
+}
+
+variable "ami"
+type = string
+default = "ami-0a9d27a9f4f5c0efc"
+}
+
+variable "inst_type" {
+type = string
+default = "t2.micro"
+}
+
+//for one subnet or one availability zone
+variable "subnet" {
+type = string 
+default = "subnet-2390d16"
+}
+
+//for two subnets/availability zones
+variable "subnet" {
+type = list
+default = ["subnet-2390d16f","subnet-a6b0a0ce"]
+}
+
+variable "secu_grp" {
+type = string 
+default = "sg-04aac5ec7442b190"
+}
+
+-------------------------------------------------------------
+ec2.tf
+--------
+provider "aws" {
+  region     = var.region
+}
+
+resource "aws_instance" "server" {
+  count = 2
+  ami           = var.ami
+  instance_type = var.inst_type
+  subnet_id = element(var.subnet,count.index)
+  security_groups = var.secu_grp
+  key_name = "sample"
+
+  tags = {
+    Name = "terraform-${count.index+1}"
+  }
+}
+
+----------------
+output.tf
+-------------
+output "instance_ip_addr" {
+  value = aws_instance.server.public_ip
+}
